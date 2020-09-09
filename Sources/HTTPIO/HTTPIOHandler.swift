@@ -8,7 +8,10 @@ import SimpleFunctional
  This is not thread-safe. handle() should be called in order on the same thread.
  */
 public final class HTTPIOHandler: IOHandling {
-    typealias IOType = HTTPIO
+    
+    public typealias IOType = HTTPIO
+    
+    public init() {}
     
     public func handle(output: HTTPIO.Output, inputClosure: @escaping (HTTPIO.Input) -> Void) {
         switch output {

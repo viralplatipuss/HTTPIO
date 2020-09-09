@@ -4,8 +4,8 @@ import SimpleFunctional
 /// IO type for making simple HTTP requests.
 public struct HTTPIO: IO {
     
-    enum Input {
-        enum RequestResult {
+    public enum Input {
+        public enum RequestResult {
             case failed(errorMessage: String)
             case responded(httpStatusCode: UInt, bodyBytes: [UInt8])
         }
@@ -14,7 +14,7 @@ public struct HTTPIO: IO {
         case requestEnded(id: UInt, result: RequestResult)
     }
     
-    enum Output {
+    public enum Output {
         /// Make an HTTP request to download bytes.
         /// This will always produce a requestStarted input. The id of which can be used to identify the response later.
         case requestBytes(hostname: String, path: String)
