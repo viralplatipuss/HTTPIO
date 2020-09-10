@@ -2,7 +2,9 @@
 
 HTTP IO type and handler for use with the SimpleFunctional library.
 
-Provides a very basic IO handler for handling HTTP requests.
+Provides a very basic IO handler for handling HTTP requests. Will be extended as needed to handle more complex requests.
+
+This is powered using [Vapor's HTTP library](https://github.com/vapor/http), which means it is a multi-platform IO handler. Linux, Mac, iOS
 
 ```swift
 public struct HTTPIO: IO {
