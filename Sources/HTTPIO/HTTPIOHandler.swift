@@ -5,18 +5,14 @@ import SimpleFunctional
 /**
  Handles HTTPIO.
 
- This is not thread-safe. handle() should be called in order on the same thread.
+ This is not thread-safe. handle(output:) should be called in order on the same thread.
  */
-public final class HTTPIOHandler: IOHandling {
+public final class HTTPIOHandler: BaseIOHandler<HTTPIO> {
     
-    public typealias IOType = HTTPIO
-    
-    public init() {}
-    
-    public func handle(output: HTTPIO.Output, inputClosure: @escaping (HTTPIO.Input) -> Void) {
+    public override func handle(output: Output) {
         switch output {
-        case let .requestBytes(hostname, path): downloadBytes(hostname: hostname, path: path, inputClosure: inputClosure)
-        case let .forceEndRequest(id): forceEnd(id: id, inputClosure: inputClosure)
+        case let .requestBytes(hostname, path): downloadBytes(hostname: hostname, path: path)
+        case let .forceEndRequest(id): forceEnd(id: id)
         }
     }
     
@@ -27,14 +23,14 @@ public final class HTTPIOHandler: IOHandling {
     private var nextId: UInt = 0
     private var clientFutureForId = [UInt: EventLoopFuture<HTTPClient>]()
     
-    private func downloadBytes(hostname: String, path: String, inputClosure: @escaping (HTTPIO.Input) -> Void) {
+    private func downloadBytes(hostname: String, path: String) {
         let id = nextId
         nextId += 1
         
-        inputClosure(.requestStarted(id: id, hostname: hostname, path: path))
+        runInput(.requestStarted(id: id, hostname: hostname, path: path))
         
         guard let url = URL(string: path) else {
-            inputClosure(.requestEnded(id: id, result: .failed(errorMessage: "Invalid path: \(path)")))
+            runInput(.requestEnded(id: id, result: .failed(errorMessage: "Invalid path: \(path)")))
             return
         }
         
@@ -43,12 +39,12 @@ public final class HTTPIOHandler: IOHandling {
         
         let httpResFuture = clientFuture.flatMap(to: HTTPResponse.self) { $0.send(HTTPRequest(url: url)) }
         
-        httpResFuture.whenSuccess {
-            inputClosure(.requestEnded(id: id, result: .responded(httpStatusCode: $0.status.code, bodyBytes: $0.body.data.map { [UInt8]($0) } ?? [])))
+        httpResFuture.whenSuccess { [weak self] in
+            self?.runInput(.requestEnded(id: id, result: .responded(httpStatusCode: $0.status.code, bodyBytes: $0.body.data.map { [UInt8]($0) } ?? [])))
         }
         
-        httpResFuture.whenFailure {
-            inputClosure(.requestEnded(id: id, result: .failed(errorMessage: $0.localizedDescription)))
+        httpResFuture.whenFailure { [weak self] in
+            self?.runInput(.requestEnded(id: id, result: .failed(errorMessage: $0.localizedDescription)))
         }
         
         httpResFuture.always { [weak self] in
@@ -56,12 +52,12 @@ public final class HTTPIOHandler: IOHandling {
         }
     }
     
-    private func forceEnd(id: UInt, inputClosure: @escaping (HTTPIO.Input) -> Void) {
+    private func forceEnd(id: UInt) {
         guard let clientFuture = clientFutureForId[id] else { return }
         
         let closeFuture = clientFuture.flatMap { $0.close() }
-        closeFuture.whenSuccess {
-            inputClosure(.requestEnded(id: id, result: .failed(errorMessage: "Connection was force ended.")))
+        closeFuture.whenSuccess { [weak self] in
+            self?.runInput(.requestEnded(id: id, result: .failed(errorMessage: "Connection was force ended.")))
         }
     }
 }

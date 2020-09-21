@@ -9,7 +9,7 @@ let package = Package(
         .library(name: "HTTPIO", targets: ["HTTPIO"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/viralplatipuss/SimpleFunctional.git", .exact("0.0.7")),
+        .package(url: "https://github.com/viralplatipuss/SimpleFunctional.git", .exact("0.0.10")),
         .package(url: "https://github.com/vapor/http.git", .exact("3.3.2")),
     ],
     targets: [
