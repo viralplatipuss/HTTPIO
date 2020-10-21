@@ -32,5 +32,10 @@ public struct HTTPIO: IO {
     public struct Request: Hashable {
         public let hostname: String
         public let path: String
+        
+        public init(hostname: String, path: String) {
+            self.hostname = hostname
+            self.path = path
+        }
     }
 }
